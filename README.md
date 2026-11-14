@@ -1,2 +1,1 @@
-# ion-trap-quantum-computer
-Ion trap simulator for quantum computation
+# Ion trap simulator for quantum computation
