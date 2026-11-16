@@ -3,21 +3,21 @@ import { PI, abs2, simulateIons, simulatePulse, simulateSpin } from './ion.js';
 const $ = id => document.getElementById(id);
 const colors = ['#6bd9ad', '#6facfa', '#b59afa'];
 const logicalOptions = [
-  ['plus0', '|+0⟩ (Superposition)'],
-  ['10', '|10⟩ (Basis state)'],
-  ['11', '|11⟩ (Basis state)'],
-  ['00', '|00⟩ (Basis state)'],
-  ['01', '|01⟩ (Basis state)'],
-  ['plus1', '|+1⟩ (Superposition)'],
-  ['uniform', '|++⟩ (Equal superposition)'],
+  ['plus0', '|+0⟩\u2002Superposition'],
+  ['10', '|10⟩\u2002Basis state'],
+  ['11', '|11⟩\u2002Basis state'],
+  ['00', '|00⟩\u2002Basis state'],
+  ['01', '|01⟩\u2002Basis state'],
+  ['plus1', '|+1⟩\u2002Superposition'],
+  ['uniform', '|++⟩\u2002Equal superposition'],
 ];
 const pulseOptions = [
-  ['10', '|1,0⟩ (Spin excitation)'],
-  ['00', '|0,0⟩ (Ground state)'],
-  ['01', '|0,1⟩ (One phonon)'],
-  ['11', '|1,1⟩ (Spin excitation and one phonon)'],
-  ['02', '|0,2⟩ (Two phonons)'],
-  ['plus0', '|+,0⟩ (Spin superposition)'],
+  ['10', '|1,0⟩\u2002Spin excitation'],
+  ['00', '|0,0⟩\u2002Ground state'],
+  ['01', '|0,1⟩\u2002One phonon'],
+  ['11', '|1,1⟩\u2002Spin excitation and one phonon'],
+  ['02', '|0,2⟩\u2002Two phonons'],
+  ['plus0', '|+,0⟩\u2002Spin superposition'],
 ];
 const defaults = {
   ions: { input: 'plus0', construction: 'cnot', position: 5, area: 2 * PI },
@@ -76,8 +76,8 @@ function configure() {
   $('experiment').setAttribute('aria-labelledby', `tab-${mode}`);
   options($('input'), pulse ? pulseOptions : logicalOptions, s.input);
   if (!pulse) options($('construction'), mode === 'ions'
-    ? [['cnot', 'CNOT (Five blocks)'], ['cz', 'Controlled-Z (Three blocks)']]
-    : [['cnot', 'CNOT (H → CZ → H)'], ['ramsey', 'Ramsey (Ry → CZ → inverse Ry)'], ['cz', 'Controlled-Z (Auxiliary pulse)']], s.construction);
+    ? [['cnot', 'CNOT\u2002Five blocks'], ['cz', 'Controlled-Z\u2002Three blocks']]
+    : [['cnot', 'CNOT\u2002H → CZ → H'], ['ramsey', 'Ramsey\u2002Ry → CZ → inverse Ry'], ['cz', 'Controlled-Z\u2002Auxiliary pulse']], s.construction);
   $('construction-control').hidden = pulse;
   $('area-control').hidden = pulse;
   ['transition-control', 'phase-control', 'eta-control'].forEach(id => $(id).hidden = !pulse);
