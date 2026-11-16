@@ -2,8 +2,6 @@
 
 A browser simulator of the ideal trapped-ion quantum gate mechanisms in Nielsen & Chuang, *Quantum Computation and Quantum Information*, §7.6 (pp. 309–324).
 
-The HTML/CSS follows the companion `harmonic-oscillator-quantum-computer`, `optical-photon-quantum-computer`, and `optical-cavity-qed-quantum-computer` projects: dark panels, blue/green/violet readouts, interactive controls and complex state amplitudes.
-
 ## Experiments
 
 1. **Ion–ion quantum gate (§7.6.3):** CNOT or CZ using the target-to-bus mapping, a control-ion auxiliary pulse, and the inverse map. Follow all five blocks, inspect the midpoint of the auxiliary cycle, or play the sequence. The default `|+0⟩` input gives a Bell state with the bus returned to `|0⟩`.
