@@ -1,11 +1,191 @@
-<html>
+<!doctype html>
+<html lang="en">
 
 <head>
-    <title>Ion Trap Quantum Computer</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description"
+    content="Explore Nielsen & Chuang §7.6: trapped-ion carrier and sideband transitions, a shared phonon bus, and laser-pulse constructions of CNOT and controlled-phase gates.">
+  <title>Ion Trap Simulator for Quantum Computation</title>
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b1019'/%3E%3Cpath d='M4 8h24M4 24h24' stroke='%236facfa' stroke-width='2'/%3E%3Ccircle cx='11' cy='16' r='3' fill='%236bd9ad'/%3E%3Ccircle cx='22' cy='16' r='3' fill='%23b59afa'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./styles.css">
 </head>
 
 <body>
-    Hello, Ion Trap Quantum Computer!
+  <main>
+    <div class="eyebrow">NIELSEN–CHUANG; QUANTUM COMPUTATION AND QUANTUM INFORMATION §7.6</div>
+    <h1>Ion Trap Simulator for Quantum Computation</h1>
+    <p class="intro">Let <strong>trapped ions share a quantum of motion</strong>. Follow how laser pulses connect
+      internal states to a phonon bus, and how a temporary visit to an auxiliary level becomes a quantum logic gate.</p>
+    <div class="mode-switch" role="tablist" aria-label="Choose an experiment">
+      <button id="tab-ions" role="tab" aria-selected="true" aria-controls="experiment" tabindex="0"
+        data-mode="ions"><span>01</span> Ion–ion quantum gate <small>§7.6.3</small></button>
+      <button id="tab-pulse" role="tab" aria-selected="false" aria-controls="experiment" tabindex="-1"
+        data-mode="pulse"><span>02</span> Carrier &amp; sidebands <small>§7.6.2</small></button>
+      <button id="tab-spin" role="tab" aria-selected="false" aria-controls="experiment" tabindex="-1"
+        data-mode="spin"><span>03</span> Spin–phonon gate <small>§7.6.4</small></button>
+    </div>
+    <div id="experiment" role="tabpanel" aria-labelledby="tab-ions">
+      <div class="grid">
+        <section class="panel control" aria-labelledby="settings-title">
+          <div class="section-heading">
+            <h2 id="settings-title">Simulation Settings</h2><span class="badge">IDEAL MODEL</span>
+          </div>
+          <label for="input"><span id="input-label">Logical Input State</span><select id="input"></select></label>
+          <label for="construction" id="construction-control">Gate Construction<select
+              id="construction"></select></label>
+          <label for="transition" id="transition-control" hidden>Laser Transition<select id="transition">
+              <option value="carrier">Carrier (ω = ω₀)</option>
+              <option value="red" selected>Red sideband (ω = ω₀ − ωz)</option>
+              <option value="blue">Blue sideband (ω = ω₀ + ωz)</option>
+            </select></label>
+          <div class="slider-group">
+            <label class="time" for="position"><span id="position-label">Sequence progress</span><output
+                id="position-value" for="position"></output></label>
+            <input id="position" type="range" min="0" max="5" step="any" value="5">
+            <div class="time scale" aria-hidden="true"><span id="scale-start">Input</span><span id="scale-mid">Auxiliary
+                pulse</span><span id="scale-end">Output</span></div>
+          </div>
+          <div id="area-control" class="slider-group">
+            <label class="time" for="area"><span>Auxiliary pulse area A</span><output id="area-value"
+                for="area"></output></label>
+            <input id="area" type="range" min="0" max="12.566370614359172" step="any" value="6.283185307179586">
+            <div class="time scale" aria-hidden="true"><span>0</span><span>2π · phase flip</span><span>4π</span></div>
+          </div>
+          <div id="phase-control" class="slider-group" hidden>
+            <label class="time" for="phase"><span>Laser phase φ</span><output id="phase-value"
+                for="phase"></output></label>
+            <input id="phase" type="range" min="-3.141592653589793" max="3.141592653589793" step="any" value="0">
+            <div class="time scale" aria-hidden="true"><span>−π</span><span>0</span><span>π</span></div>
+          </div>
+          <div id="eta-control" class="slider-group" hidden>
+            <label class="time" for="eta"><span>Lamb–Dicke parameter η</span><output id="eta-value"
+                for="eta"></output></label>
+            <input id="eta" type="range" min="0.05" max="0.25" step="0.01" value="0.15">
+          </div>
+          <div class="row presets" id="presets"></div>
+          <button id="play" aria-pressed="false">▶ Play pulse sequence</button>
+          <button id="reset" class="text-button">Reset this experiment</button>
+          <div class="math" id="encoding"></div>
+          <p id="control-note" class="muted"></p>
+          <div id="error" role="alert"></div>
+        </section>
+        <section class="panel experiment-view" aria-labelledby="view-title">
+          <div class="section-heading">
+            <h2 id="view-title">A Shared Phonon Bus</h2><span id="view-badge" class="badge green">2 IONS · 1 BUS</span>
+          </div>
+          <div class="stats">
+            <div class="stat"><small id="stat1-label">Full-state fidelity with ideal output</small><strong class="good"
+                id="stat1">—</strong></div>
+            <div class="stat"><small id="stat2-label">Bus in ground state · P(n = 0)</small><strong
+                id="stat2">—</strong></div>
+            <div class="stat"><small id="stat3-label">Auxiliary population · P(a)</small><strong class="violet"
+                id="stat3">—</strong></div>
+          </div>
+          <div id="apparatus" class="apparatus"></div>
+          <div id="stages" class="stages" role="group" aria-label="Choose an observation point"></div>
+          <p id="circuit-caption" class="muted circuit-caption"></p>
+          <div id="insight" class="insight" role="status"></div>
+          <div class="state-heading"><span class="muted" id="state-title">Full state amplitudes · |control target,
+              n⟩</span><span id="stage-name" class="stage-label">Output</span></div>
+          <div id="state-vector" class="state-vector" aria-label="Complex state amplitudes"></div>
+          <div class="motion-heading"><span class="muted">Motional populations</span><span id="motion-mean"></span>
+          </div>
+          <div id="motion-populations" class="motion-populations"></div>
+          <p id="state-note" class="muted state-note"></p>
+        </section>
+      </div>
+      <div class="two">
+        <section class="panel" aria-labelledby="prob-title">
+          <div class="section-heading">
+            <h2 id="prob-title">Qubit Measurement Probabilities</h2><span id="prob-badge" class="badge">IONS · BUS
+              TRACED OUT</span>
+          </div>
+          <div id="probability-bars"></div>
+          <p id="prob-note" class="muted"></p>
+        </section>
+        <section class="panel" aria-labelledby="sweep-title">
+          <div class="section-heading">
+            <h2 id="sweep-title">Through the Pulse Sequence</h2><span id="chart-badge" class="badge">CURRENT
+              INPUT</span>
+          </div>
+          <canvas id="chart" role="img" aria-label="Probabilities and fidelity through the pulse sequence"></canvas>
+          <div id="chart-legend" class="legend"></div>
+          <p id="chart-note" class="muted"></p>
+        </section>
+      </div>
+      <details class="panel theory">
+        <summary>Trapped ions, pulse phases &amp; equations <span>Model notes ↗</span></summary>
+        <div class="theory-grid">
+          <div>
+            <h3>01 / Carrier and motional sidebands · §7.6.2</h3>
+            <p>Two internal states, |0⟩ and |1⟩, encode a spin qubit. The ions share a quantized center-of-mass mode
+              with phonon number n. All dynamics are in a resonant interaction frame, with the rotating-wave and
+              first-order Lamb–Dicke approximations.</p>
+            <div class="formula">Carrier: |0,n⟩ ↔ |1,n⟩ &nbsp; at ω₀<br>Red: |0,n⟩ ↔ |1,n−1⟩ &nbsp; at ω₀ − ωz<br>Blue:
+              |0,n⟩ ↔ |1,n+1⟩ &nbsp; at ω₀ + ωz</div>
+            <p>Write Hc/ℏ = Ω(eⁱφ |1⟩⟨0| + h.c.)/2 and Hr/ℏ = iηΩ(eⁱφ |1⟩⟨0|a − h.c.)/2; replace a by a† for blue.
+              Carrier θ = Ωt; sideband θ = ηΩt, with effective pair angles θ√n (red) and θ√(n+1) (blue). Ω includes any
+              collective-mode normalization.</p>
+            <p>The phase slider follows these Hamiltonians. Changing η at fixed sideband θ changes the required duration
+              Ωt, rather than the state. This mode retains n = 0…3; its offered inputs reach at most n = 3, so no
+              populated transition is cut off. A red pulse leaves |0,0⟩ dark. Coherent sideband driving alone is not
+              cooling; cooling also needs dissipation.</p>
+          </div>
+          <div>
+            <h3>02 / A phase from an auxiliary state · §7.6.3</h3>
+            <p>The selected pair |1,1⟩ ↔ |a,0⟩ is driven coherently. The auxiliary transition uses a Hermitian two-level
+              Hamiltonian, Haux/ℏ = Ωaux(|a,0⟩⟨1,1| + h.c.)/2. Its coupling phase is a convention; its 2π phase flip is
+              invariant.</p>
+            <div class="formula">|1,1⟩ → cos(A/2)|1,1⟩ − i sin(A/2)|a,0⟩<br>A = 2π ⇒ |1,1⟩ → −|1,1⟩<br>CZ = diag(1, 1,
+              1, −1)</div>
+            <p>A π pulse moves the coupled component entirely to the auxiliary level; 2π returns it with a minus sign;
+              4π returns with no sign change. An incomplete return leaves population outside the computational space.
+              The displayed probabilities retain this population without postselection.</p>
+          </div>
+          <div>
+            <h3>03 / Two ions, one phonon bus · Eq. (7.126)</h3>
+            <p>Ion j is the control and ion k is the target. The bus starts in |0⟩. Following the textbook's
+              construction, we map the <em>target</em> state to the bus, apply the phase operation on the
+              <em>control</em> ion, and undo the map.
+            </p>
+            <div class="formula">M: |1,0⟩ → |0,1⟩, |0,1⟩ → −|1,0⟩<br>CNOTjk = Hk Mₖ⁻¹ CZj,bus Mₖ Hk<br>Input |+0⟩ →
+              (|00⟩ + |11⟩)/√2</div>
+            <p>The red-sideband map uses phase φ = π; its inverse reverses the pulse angle. Using the same map twice
+              would introduce a relative sign. The full 12 amplitudes include the control auxiliary state and bus n =
+              0,1. This subspace is closed for the offered sequence and initial bus state, including imperfect auxiliary
+              pulse areas.</p>
+            <p>Sequence progress is a normalized coordinate through gate blocks, not laboratory time. H blocks follow
+              the unitary interpolation Hᶠ (0 ≤ f ≤ 1); H itself is an ideal composite single-qubit operation,
+              obtainable from carrier rotations. Different blocks need different physical durations.</p>
+          </div>
+          <div>
+            <h3>04 / Spin–phonon experiment &amp; readouts · §7.6.4</h3>
+            <p>Here the phonon is the control and the internal spin is the target. The phase-corrected construction H →
+              CZ → H gives exact CNOT. The textbook's Ramsey sequence Ry(π/2) → CZ → Ry(−π/2) gives controlled(−X),
+              equal to CNOT followed by Z on the phonon. Basis probabilities agree, but superposition phases differ.</p>
+            <div class="formula">F = |⟨ψideal | ψ⟩|²<br>P(q) = Σn |⟨q,n | ψ⟩|²<br>⟨n⟩ = Σn n P(n)</div>
+            <p>Fidelity compares the full current state to the ideal <em>final</em> output for the selected input and
+              construction, including a reset bus in ion–ion mode. It is not an average gate fidelity. A zero amplitude
+              has no defined phase; its phase dial is hidden.</p>
+            <p>Reference: Nielsen &amp; Chuang, <em>Quantum Computation and Quantum Information</em>, §7.6, pp. 309–324.
+              The historical demonstration used one ⁹Be⁺ ion, with internal and motional qubits; it was not a two-ion
+              CNOT. See also <a href="https://doi.org/10.1103/PhysRevLett.75.4714" target="_blank"
+                rel="noopener noreferrer">Monroe et al. (1995)</a>.</p>
+          </div>
+        </div>
+      </details>
+    </div>
+    <p class="note"><strong>Model scope:</strong> This simulator illustrates the ideal, resonant gate mechanisms of
+      §7.6. It assumes a prepared motional state and selective laser addressing. Heating, dephasing, spontaneous
+      emission, off-resonant transitions, other motional modes, and trap micromotion are not included. The textbook
+      highlights motional-state preparation and phonon coherence as key limitations.</p>
+    <noscript>
+      <p class="note">Enable JavaScript to run the ion-trap simulator.</p>
+    </noscript>
+  </main>
+  <script type="module" src="./app.js"></script>
 </body>
 
 </html>
