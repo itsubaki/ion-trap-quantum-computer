@@ -2,7 +2,7 @@
 
 A browser simulator of the ideal trapped-ion quantum gate mechanisms in Nielsen & Chuang, *Quantum Computation and Quantum Information*, §7.6 (pp. 309–324).
 
-The HTML/CSS follows the companion `harmonic-oscillator-quantum-computer`, `optical-photon-quantum-computer`, and `optical-cavity-qed-quantum-computer` projects: dark panels, blue/green/violet readouts, interactive controls and complex state amplitudes. The interface is English, consistent with those simulators. 
+The HTML/CSS follows the companion `harmonic-oscillator-quantum-computer`, `optical-photon-quantum-computer`, and `optical-cavity-qed-quantum-computer` projects: dark panels, blue/green/violet readouts, interactive controls and complex state amplitudes.
 
 ## Experiments
 
